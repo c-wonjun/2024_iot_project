@@ -1,0 +1,62 @@
+#include <DHT11.h>
+#include <MQUnifiedsensor.h>
+#include <SoftwareSerial.h>
+
+#define DHTPIN 2
+#define MQPIN A0
+
+DHT11 dht(DHTPIN);
+
+SoftwareSerial BTSerial(3, 4);
+
+int cnt;
+
+void setup() {
+  Serial.begin(9600);
+  BTSerial.begin(9600);
+  cnt = 0;
+}
+
+int avgGas(int gas){
+  float val = 0;
+  for (int i = 0; i<10; i++){
+    val += gas;
+    delay(200);
+  }
+  float avg = 0;
+  avg = val / 10;
+  return avg;
+}
+
+void loop() {
+  int h, t, gas = 0;
+  h = dht.readHumidity();
+  t = dht.readTemperature();
+  gas = analogRead(MQPIN);
+
+  Serial.print("Humidity : ");
+  Serial.print(h);
+  Serial.print("%    ");
+  Serial.print("Temperature : ");
+  Serial.print(t);
+  Serial.print("C    ");
+  Serial.print("Gas : ");
+  Serial.print(gas);
+  Serial.println("ppm");
+ 
+  Serial.write("Receive : ");
+  while(BTSerial.available()){
+    Serial.write(BTSerial.read());
+  }
+  Serial.println();
+
+  BTSerial.print(h);
+  BTSerial.print(",");
+  BTSerial.print(t);
+  BTSerial.print(",");
+  BTSerial.println(gas);
+  Serial.println("Send : Humidity, Temperature, Gas");
+ 
+  cnt++;
+  delay(3000);
+}
